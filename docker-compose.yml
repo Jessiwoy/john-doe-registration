@@ -1,0 +1,55 @@
+# docker-compose.yml
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: john-doe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-john_doe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-john_doe_password}
+      POSTGRES_DB: ${POSTGRES_DB:-john_doe_registration}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-john_doe} -d ${POSTGRES_DB:-john_doe_registration}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: john-doe-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      BACKEND_PORT: ${BACKEND_PORT:-3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://john_doe:john_doe_password@postgres:5432/john_doe_registration?schema=public}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: john-doe-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+
+volumes:
+  postgres_data:

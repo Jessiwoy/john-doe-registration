@@ -16,4 +16,18 @@ john-doe-registration/
 
 ## Estado atual
 
-Task 1 em andamento: setup inicial do monorepo com frontend e backend.
+Task 2 em andamento: Docker Compose com frontend, backend e PostgreSQL.
+
+## Execução com Docker
+
+```bash
+docker compose up --build
+```
+
+Serviços expostos:
+
+```text
+frontend: http://localhost:5173
+backend:  http://localhost:3000
+postgres: localhost:5432
+```
