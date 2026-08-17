@@ -19,7 +19,9 @@ describe('ClientsController', () => {
     clientsService = {
       create: jest.fn(),
     };
-    clientsController = new ClientsController(clientsService as ClientsService);
+    clientsController = new ClientsController(
+      clientsService as unknown as ClientsService,
+    );
   });
 
   it('retorna mensagem de sucesso ao cadastrar cliente', async () => {

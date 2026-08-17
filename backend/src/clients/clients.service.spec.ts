@@ -35,7 +35,9 @@ describe('ClientsService', () => {
       findActiveColorById: jest.fn(),
       create: jest.fn(),
     };
-    clientsService = new ClientsService(clientsRepository as ClientsRepository);
+    clientsService = new ClientsService(
+      clientsRepository as unknown as ClientsRepository,
+    );
   });
 
   it('cadastra cliente válido', async () => {
