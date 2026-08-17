@@ -1,4 +1,5 @@
 // clients.service.spec.ts
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import {
   BadRequestException,
   ConflictException,

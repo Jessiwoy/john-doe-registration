@@ -1,4 +1,5 @@
 // colors.controller.spec.ts
+import { describe, expect, it, jest } from '@jest/globals';
 import { ColorsController } from './colors.controller';
 import { ColorsService } from './colors.service';
 
@@ -13,7 +14,7 @@ describe('ColorsController', () => {
       },
     ];
     const colorsService = {
-      findActiveColors: jest.fn().mockResolvedValue(colors),
+      findActiveColors: jest.fn(() => Promise.resolve(colors)),
     } as unknown as ColorsService;
     const colorsController = new ColorsController(colorsService);
 
