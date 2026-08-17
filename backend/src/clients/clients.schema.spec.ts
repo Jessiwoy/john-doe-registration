@@ -12,7 +12,7 @@ const validPayload = {
 };
 
 describe('createClientSchema', () => {
-  it('normaliza um payload válido', () => {
+  it('normaliza payload com nome e sobrenome válidos', () => {
     const result = createClientSchema.parse(validPayload);
 
     expect(result).toEqual({
@@ -26,7 +26,19 @@ describe('createClientSchema', () => {
 
   it('rejeita nome vazio', () => {
     expect(() =>
+      createClientSchema.parse({ ...validPayload, fullName: '' }),
+    ).toThrow();
+  });
+
+  it('rejeita nome composto apenas por espaços', () => {
+    expect(() =>
       createClientSchema.parse({ ...validPayload, fullName: '   ' }),
+    ).toThrow();
+  });
+
+  it('rejeita nome com apenas uma palavra', () => {
+    expect(() =>
+      createClientSchema.parse({ ...validPayload, fullName: 'John' }),
     ).toThrow();
   });
 

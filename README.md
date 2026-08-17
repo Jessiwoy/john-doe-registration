@@ -25,6 +25,18 @@ john-doe-registration/
 └── README.md
 ```
 
+## Arquitetura
+
+```text
+React + TypeScript
+        ↓ REST
+NestJS + TypeScript
+        ↓ Prisma
+    PostgreSQL
+```
+
+O frontend é responsável pela interface do formulário e pela validação inicial para melhorar a experiência do usuário. O backend concentra as regras de negócio e a validação definitiva dos dados recebidos. O Prisma faz o acesso ao PostgreSQL e mantém o relacionamento entre clientes e cores.
+
 ## Execução Com Docker
 
 Pré-requisitos:
@@ -72,6 +84,18 @@ Suba o PostgreSQL:
 
 ```bash
 docker compose up -d postgres
+```
+
+Quando toda a aplicação roda pelo Docker Compose, o backend acessa o banco pelo hostname interno `postgres`:
+
+```env
+DATABASE_URL=postgresql://john_doe:john_doe_password@postgres:5432/john_doe_registration?schema=public
+```
+
+Quando o backend roda diretamente na máquina e apenas o PostgreSQL está em Docker, configure `backend/.env` com `localhost`:
+
+```env
+DATABASE_URL=postgresql://john_doe:john_doe_password@localhost:5432/john_doe_registration?schema=public
 ```
 
 Backend:
