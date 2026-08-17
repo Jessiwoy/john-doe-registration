@@ -9,7 +9,10 @@ const requiredTrimmedString = (message: string) =>
     .refine((value) => value.length > 0, { message });
 
 export const createClientSchema = z.object({
-  fullName: requiredTrimmedString('Informe o nome completo.'),
+  fullName: requiredTrimmedString('Informe nome e sobrenome.').refine(
+    (value) => value.split(/\s+/).filter(Boolean).length >= 2,
+    { message: 'Informe nome e sobrenome.' },
+  ),
   cpf: z
     .string()
     .transform(normalizeCpf)
