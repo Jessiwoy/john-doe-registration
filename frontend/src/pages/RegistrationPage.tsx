@@ -1,18 +1,31 @@
 // RegistrationPage.tsx
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   clientRegistrationSchema,
   type ClientRegistrationFormData,
 } from '../schemas/clientRegistrationSchema';
+import { createClient, getColors } from '../services/registrationService';
+import type { Color } from '../types/color';
 import { formatCpf } from '../utils/cpf';
 
-const colorOptions: Array<{ id: string; name: string }> = [];
+type Feedback = {
+  message: string;
+  type: 'error' | 'success';
+};
 
 function RegistrationPage() {
+  const observationsRef = useRef<HTMLTextAreaElement | null>(null);
+  const [colors, setColors] = useState<Color[]>([]);
+  const [colorsError, setColorsError] = useState(false);
+  const [isLoadingColors, setIsLoadingColors] = useState(true);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const {
-    formState: { errors },
+    formState: { errors, isSubmitting },
     handleSubmit,
+    reset,
     register,
     watch,
   } = useForm<ClientRegistrationFormData>({
@@ -26,10 +39,80 @@ function RegistrationPage() {
     },
   });
   const observationsLength = watch('observations')?.length ?? 0;
+  const selectedColorId = watch('favoriteColorId');
+  const selectedColor = colors.find((color) => color.id === selectedColorId);
   const cpfField = register('cpf');
+  const observationsField = register('observations');
 
-  function handleValidSubmit() {
-    return undefined;
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadColors() {
+      try {
+        const availableColors = await getColors();
+
+        if (isActive) {
+          setColors(availableColors);
+          setColorsError(false);
+        }
+      } catch {
+        if (isActive) {
+          setColorsError(true);
+        }
+      } finally {
+        if (isActive) {
+          setIsLoadingColors(false);
+        }
+      }
+    }
+
+    void loadColors();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  async function handleValidSubmit(data: ClientRegistrationFormData) {
+    setFeedback(null);
+
+    try {
+      await createClient(data);
+      reset();
+      if (observationsRef.current) {
+        observationsRef.current.style.height = '';
+      }
+      setFeedback({
+        message: 'Cadastro realizado com sucesso.',
+        type: 'success',
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        setFeedback({
+          message: 'Este cliente já possui cadastro.',
+          type: 'error',
+        });
+        return;
+      }
+
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        setFeedback({
+          message: 'Revise os dados informados.',
+          type: 'error',
+        });
+        return;
+      }
+
+      setFeedback({
+        message: 'Não foi possível realizar o cadastro. Tente novamente.',
+        type: 'error',
+      });
+    }
+  }
+
+  function resizeObservationsTextarea(textarea: HTMLTextAreaElement) {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 256)}px`;
   }
 
   return (
@@ -162,18 +245,30 @@ function RegistrationPage() {
                 }
                 aria-invalid={Boolean(errors.favoriteColorId)}
                 defaultValue=""
+                disabled={isLoadingColors || colorsError}
                 id="favoriteColorId"
                 {...register('favoriteColorId')}
               >
                 <option disabled value="">
-                  Selecione uma cor
+                  {isLoadingColors ? 'Carregando cores...' : 'Selecione uma cor'}
                 </option>
-                {colorOptions.map((color) => (
+                {colors.map((color) => (
                   <option key={color.id} value={color.id}>
                     {color.name}
                   </option>
                 ))}
               </select>
+              <span
+                className="mt-2 block h-1 w-12 rounded-full bg-zinc-200 transition-colors"
+                style={{
+                  backgroundColor: selectedColor?.hex ?? undefined,
+                }}
+              />
+              {colorsError ? (
+                <p className="mt-2 text-sm text-red-700">
+                  Não foi possível carregar as cores.
+                </p>
+              ) : null}
               {errors.favoriteColorId ? (
                 <p
                   className="mt-2 text-sm text-red-700"
@@ -192,7 +287,7 @@ function RegistrationPage() {
                 Observações
               </label>
               <textarea
-                className="mt-2 min-h-36 w-full resize-y rounded-md border border-zinc-300 bg-white px-3 py-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="mt-2 min-h-36 max-h-64 w-full resize-none overflow-y-auto rounded-md border border-zinc-300 bg-white px-3 py-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                 aria-describedby={
                   errors.observations
                     ? 'observations-error observations-count'
@@ -202,7 +297,15 @@ function RegistrationPage() {
                 id="observations"
                 maxLength={5000}
                 placeholder="Inclua detalhes importantes sobre o cliente."
-                {...register('observations')}
+                {...observationsField}
+                onChange={(event) => {
+                  void observationsField.onChange(event);
+                  resizeObservationsTextarea(event.target);
+                }}
+                ref={(element) => {
+                  observationsField.ref(element);
+                  observationsRef.current = element;
+                }}
               />
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-zinc-500">
@@ -222,11 +325,24 @@ function RegistrationPage() {
               ) : null}
             </div>
 
+            {feedback ? (
+              <p
+                className={
+                  feedback.type === 'success'
+                    ? 'rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800'
+                    : 'rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800'
+                }
+              >
+                {feedback.message}
+              </p>
+            ) : null}
+
             <button
-              className="mt-2 h-12 rounded-md bg-zinc-950 px-5 text-base font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2"
+              className="mt-2 h-12 rounded-md bg-zinc-950 px-5 text-base font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400"
+              disabled={isSubmitting || isLoadingColors || colorsError}
               type="submit"
             >
-              Enviar cadastro
+              {isSubmitting ? 'Enviando...' : 'Enviar cadastro'}
             </button>
           </div>
         </form>
