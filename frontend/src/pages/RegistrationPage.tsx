@@ -1,6 +1,37 @@
 // RegistrationPage.tsx
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import {
+  clientRegistrationSchema,
+  type ClientRegistrationFormData,
+} from '../schemas/clientRegistrationSchema';
+import { formatCpf } from '../utils/cpf';
+
+const colorOptions: Array<{ id: string; name: string }> = [];
 
 function RegistrationPage() {
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+    watch,
+  } = useForm<ClientRegistrationFormData>({
+    resolver: zodResolver(clientRegistrationSchema),
+    defaultValues: {
+      fullName: '',
+      cpf: '',
+      email: '',
+      favoriteColorId: '',
+      observations: '',
+    },
+  });
+  const observationsLength = watch('observations')?.length ?? 0;
+  const cpfField = register('cpf');
+
+  function handleValidSubmit() {
+    return undefined;
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f8f5] px-4 py-6 text-zinc-950 sm:px-6 lg:px-8">
       <section className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl items-center gap-8 lg:grid-cols-[0.85fr_1.15fr]">
@@ -25,7 +56,10 @@ function RegistrationPage() {
           </div>
         </div>
 
-        <form className="w-full rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
+        <form
+          className="w-full rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 lg:p-8"
+          onSubmit={handleSubmit(handleValidSubmit)}
+        >
           <div className="grid gap-5">
             <div>
               <label
@@ -38,11 +72,20 @@ function RegistrationPage() {
               </label>
               <input
                 className="mt-2 h-12 w-full rounded-md border border-zinc-300 bg-white px-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                aria-describedby={
+                  errors.fullName ? 'fullName-error' : undefined
+                }
+                aria-invalid={Boolean(errors.fullName)}
                 id="fullName"
-                name="fullName"
                 placeholder="John Doe"
                 type="text"
+                {...register('fullName')}
               />
+              {errors.fullName ? (
+                <p className="mt-2 text-sm text-red-700" id="fullName-error">
+                  {errors.fullName.message}
+                </p>
+              ) : null}
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2">
@@ -57,12 +100,24 @@ function RegistrationPage() {
                 </label>
                 <input
                   className="mt-2 h-12 w-full rounded-md border border-zinc-300 bg-white px-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  aria-describedby={errors.cpf ? 'cpf-error' : undefined}
+                  aria-invalid={Boolean(errors.cpf)}
                   id="cpf"
                   inputMode="numeric"
-                  name="cpf"
                   placeholder="000.000.000-00"
                   type="text"
+                  {...cpfField}
+                  onChange={(event) => {
+                    event.target.value = formatCpf(event.target.value);
+
+                    void cpfField.onChange(event);
+                  }}
                 />
+                {errors.cpf ? (
+                  <p className="mt-2 text-sm text-red-700" id="cpf-error">
+                    {errors.cpf.message}
+                  </p>
+                ) : null}
               </div>
 
               <div>
@@ -76,11 +131,18 @@ function RegistrationPage() {
                 </label>
                 <input
                   className="mt-2 h-12 w-full rounded-md border border-zinc-300 bg-white px-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  aria-invalid={Boolean(errors.email)}
                   id="email"
-                  name="email"
                   placeholder="john@email.com"
                   type="email"
+                  {...register('email')}
                 />
+                {errors.email ? (
+                  <p className="mt-2 text-sm text-red-700" id="email-error">
+                    {errors.email.message}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -95,14 +157,31 @@ function RegistrationPage() {
               </label>
               <select
                 className="mt-2 h-12 w-full rounded-md border border-zinc-300 bg-white px-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                aria-describedby={
+                  errors.favoriteColorId ? 'favoriteColorId-error' : undefined
+                }
+                aria-invalid={Boolean(errors.favoriteColorId)}
                 defaultValue=""
                 id="favoriteColorId"
-                name="favoriteColorId"
+                {...register('favoriteColorId')}
               >
                 <option disabled value="">
                   Selecione uma cor
                 </option>
+                {colorOptions.map((color) => (
+                  <option key={color.id} value={color.id}>
+                    {color.name}
+                  </option>
+                ))}
               </select>
+              {errors.favoriteColorId ? (
+                <p
+                  className="mt-2 text-sm text-red-700"
+                  id="favoriteColorId-error"
+                >
+                  {errors.favoriteColorId.message}
+                </p>
+              ) : null}
             </div>
 
             <div>
@@ -114,19 +193,38 @@ function RegistrationPage() {
               </label>
               <textarea
                 className="mt-2 min-h-36 w-full resize-y rounded-md border border-zinc-300 bg-white px-3 py-3 text-base outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                aria-describedby={
+                  errors.observations
+                    ? 'observations-error observations-count'
+                    : 'observations-count'
+                }
+                aria-invalid={Boolean(errors.observations)}
                 id="observations"
                 maxLength={5000}
-                name="observations"
                 placeholder="Inclua detalhes importantes sobre o cliente."
+                {...register('observations')}
               />
-              <p className="mt-2 text-xs text-zinc-500">
-                <span className="text-red-600">*</span> Campos obrigatórios.
-              </p>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-zinc-500">
+                  <span className="text-red-600">*</span> Campos obrigatórios.
+                </p>
+                <p className="text-xs text-zinc-500" id="observations-count">
+                  {observationsLength}/5000
+                </p>
+              </div>
+              {errors.observations ? (
+                <p
+                  className="mt-2 text-sm text-red-700"
+                  id="observations-error"
+                >
+                  {errors.observations.message}
+                </p>
+              ) : null}
             </div>
 
             <button
               className="mt-2 h-12 rounded-md bg-zinc-950 px-5 text-base font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2"
-              type="button"
+              type="submit"
             >
               Enviar cadastro
             </button>
