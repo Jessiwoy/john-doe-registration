@@ -16,8 +16,8 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return API status text', () => {
-      expect(appController.getStatus()).toBe('John Doe Registration API');
+    it('should return API health status', () => {
+      expect(appController.getHealth()).toEqual({ status: 'ok' });
     });
   });
 });
