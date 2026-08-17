@@ -1,4 +1,5 @@
 // clients.schema.spec.ts
+import { describe, expect, it } from '@jest/globals';
 import { createClientSchema } from './clients.schema';
 import { isValidCpf, normalizeCpf } from './cpf';
 
