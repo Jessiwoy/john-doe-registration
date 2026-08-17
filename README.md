@@ -191,6 +191,127 @@ Os testes unitários do backend usam mocks quando validam service/controller. Os
 
 Os testes do frontend usam Vitest e Testing Library, mockando HTTP para validar o fluxo do usuário sem depender da API real.
 
+## Testes Manuais Realizados
+
+### Ambiente e Docker
+
+- [x] Ambiente resetado com remoção dos volumes
+- [x] Aplicação iniciada com `docker compose up --build`
+- [x] PostgreSQL iniciou corretamente
+- [x] Backend iniciou corretamente
+- [x] Frontend iniciou corretamente
+- [x] Migrations foram aplicadas automaticamente
+- [x] Prisma Client foi gerado automaticamente
+- [x] Seed inicial das cores foi executado
+- [x] Frontend disponível em `http://localhost:5173`
+- [x] Backend disponível em `http://localhost:3000`
+
+### Healthcheck
+
+- [x] `GET /health` retorna HTTP `200`
+- [x] `GET /health` retorna `{ "status": "ok" }`
+
+### Cores
+
+- [x] `GET /colors` retorna HTTP `200`
+- [x] API retorna as 7 cores iniciais
+- [x] Cada cor possui `id`, `name`, `value` e `hex`
+- [x] As 7 cores iniciais estão ativas
+- [x] Cores carregam corretamente no select do frontend
+- [x] Seleção de cor funciona
+- [x] Indicador visual acompanha a cor selecionada
+- [x] Cores foram conferidas diretamente no PostgreSQL
+
+### Formulário e validações
+
+- [x] Formulário vazio apresenta erros nos campos obrigatórios
+- [x] Nome vazio é rejeitado
+- [x] Nome contendo somente espaços é rejeitado
+- [x] Nome contendo apenas uma palavra é rejeitado
+- [x] Nome completo válido é aceito
+- [x] CPF inválido é rejeitado
+- [x] CPF com sequência repetida é rejeitado
+- [x] CPF incompleto é rejeitado
+- [x] CPF válido é aceito
+- [x] Máscara de CPF funciona no frontend
+- [x] E-mail inválido é rejeitado
+- [x] E-mail válido é aceito
+- [x] Cor preferida é obrigatória
+- [x] Observações são opcionais
+- [x] Formulário inválido não realiza cadastro
+
+### Observações
+
+- [x] Textarea cresce automaticamente conforme o conteúdo
+- [x] Textarea não possui redimensionamento manual
+- [x] Contador de caracteres funciona
+- [x] Exatamente 5000 caracteres são aceitos
+- [x] Frontend impede inserir conteúdo acima de 5000 caracteres
+- [x] Cadastro com 5000 caracteres funciona
+- [x] Conteúdo com 5000 caracteres foi persistido corretamente
+- [x] Layout permanece estável com conteúdo longo
+
+### Cadastro válido
+
+- [x] Cadastro realizado pelo formulário
+- [x] `POST /clients` retorna HTTP `201`
+- [x] Botão apresenta estado de loading durante o envio
+- [x] Mensagem de sucesso é exibida
+- [x] Registro é persistido no PostgreSQL
+- [x] CPF é armazenado sem máscara
+- [x] E-mail é armazenado normalizado
+- [x] `favoriteColorId` é persistido
+- [x] Observações são persistidas
+- [x] `createdAt` é preenchido
+
+### Cadastro duplicado
+
+- [x] Novo cadastro com CPF existente é bloqueado
+- [x] API retorna HTTP `409`
+- [x] Frontend exibe feedback de cliente já cadastrado
+- [x] Segundo registro não é criado
+- [x] PostgreSQL mantém apenas um registro para o CPF
+
+### Validação direta do backend
+
+- [x] Backend foi testado sem depender do frontend
+- [x] Nome contendo apenas uma palavra retorna HTTP `400`
+- [x] Resposta de validação retorna `Dados inválidos.`
+
+### Banco de dados
+
+- [x] Clientes cadastrados foram conferidos diretamente no PostgreSQL
+- [x] `fullName` foi persistido corretamente
+- [x] `cpf` foi persistido somente com números
+- [x] `email` foi persistido normalizado
+- [x] `favoriteColorId` foi persistido
+- [x] `observations` foi persistido
+- [x] `createdAt` foi preenchido
+- [x] Existem 7 cores na tabela `Color`
+- [x] Todas as cores iniciais estão ativas
+- [x] Não existem clientes duplicados pelo mesmo CPF
+- [x] Relacionamento `Client -> Color` foi validado com `JOIN`
+- [x] Cliente está relacionado à cor selecionada
+
+### Integração
+
+- [x] Frontend consegue consumir `GET /colors`
+- [x] Frontend consegue realizar `POST /clients`
+- [x] Nenhum erro de CORS foi identificado durante o fluxo testado
+
+### Responsividade e usabilidade
+
+- [x] Layout validado em desktop
+- [x] Layout validado em 375px
+- [x] Layout validado em 390px
+- [x] Layout validado em 430px
+- [x] Inputs permanecem dentro do container
+- [x] Mensagens de erro permanecem visíveis
+- [x] Botão permanece acessível
+- [x] Textarea permanece responsivo
+- [x] Navegação por teclado funciona
+- [x] Ordem de foco permanece coerente
+
 ## Decisões Técnicas
 
 ### NestJS
